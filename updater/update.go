@@ -2,6 +2,7 @@ package updater
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"gitlab.com/arha/Ertebot/handler"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
@@ -38,5 +39,7 @@ func Update() {
 			continue
 		}
 
+		msg := handler.Handle(update.Message)
+		bot.Send(msg)
 	}
 }

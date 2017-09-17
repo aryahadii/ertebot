@@ -1,11 +1,8 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-
-	"net/http"
-
 	"github.com/spf13/cobra"
+	"gitlab.com/arha/Ertebot/updater"
 )
 
 var startCmd = &cobra.Command{
@@ -21,5 +18,5 @@ func init() {
 func start(cmd *cobra.Command, args []string) {
 	// logVersion()
 
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	updater.Update()
 }

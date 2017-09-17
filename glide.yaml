@@ -5,3 +5,5 @@ import:
 - package: github.com/spf13/cobra
 - package: gopkg.in/telegram-bot-api.v4
   version: ~4.6.0
+- package: github.com/patrickmn/go-cache
+  version: ~2.0.0
