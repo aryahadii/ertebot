@@ -23,8 +23,8 @@ func handleNewMessageArgs(message *botAPI.Message, state model.UserState) string
 		secretMessage := &model.SecretMessage{
 			Message:          state.Args[0].(string),
 			SenderID:         strconv.Itoa(message.From.ID),
-			SenderUsername:   message.From.UserName,
-			ReceiverUsername: strings.TrimLeft(state.Args[1].(string), "@"),
+			SenderUsername:   strings.ToLower(message.From.UserName),
+			ReceiverUsername: strings.ToLower(strings.TrimLeft(state.Args[1].(string), "@")),
 			SendEpoch:        time.Now().Unix(),
 			SeenEpoch:        0,
 		}

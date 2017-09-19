@@ -2,6 +2,7 @@ package handler
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
@@ -12,6 +13,7 @@ import (
 )
 
 func handleCommand(message *botAPI.Message) string {
+	// Update LastUseEpoch or Create new user if it's needed
 	person := &model.Person{}
 	err := db.PeopleCollection.Find(bson.M{"UserID": message.From.ID}).One(person)
 	if err != nil {
@@ -19,7 +21,7 @@ func handleCommand(message *botAPI.Message) string {
 			UserID:       strconv.Itoa(message.From.ID),
 			FirstName:    message.From.FirstName,
 			LastName:     message.From.LastName,
-			Username:     message.From.UserName,
+			Username:     strings.ToLower(message.From.UserName),
 			LastUseEpoch: time.Now().Unix(),
 		}
 
@@ -29,12 +31,19 @@ func handleCommand(message *botAPI.Message) string {
 		db.PeopleCollection.Update(&model.Person{Username: person.Username}, person)
 	}
 
-	if message.Command() == "newmessage" {
+	// Handle commands
+	if message.Command() == model.StartCommand {
+		return model.WelcomeMessage
+	}
+	if message.Command() == model.NewMessageCommand {
 		state := &model.UserState{
-			Command: "newmessage",
+			Command: model.NewMessageCommand,
 		}
 		userState.Set(strconv.Itoa(message.From.ID), *state, cache.DefaultExpiration)
 		return "متن پیام را وارد کنید"
+	}
+	if message.Command() == model.InboxCommand {
+		return HandleInboxCommand(message)
 	}
 
 	return "دستور به درستی وارد نشده"
