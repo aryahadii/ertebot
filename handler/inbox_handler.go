@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"gitlab.com/arha/Ertebot/db"
@@ -22,13 +23,24 @@ func HandleInboxCommand(message *botAPI.Message) string {
 	if err != nil {
 		return model.NoSecretMessageFoundMessage
 	}
-	if len(inboxMessages) == 0 {
-		return model.NoSecretMessageFoundMessage
-	}
 
 	resultMessage := ""
 	for _, msg := range inboxMessages {
+		if msg.SeenEpoch != 0 {
+			continue
+		}
 		resultMessage += fmt.Sprintf(model.InboxMessagesTemplate, msg.SenderID, msg.Message)
+
+		seenMsg := msg
+		seenMsg.SeenEpoch = time.Now().Unix()
+		err := db.MessagesCollection.Update(msg, seenMsg)
+		if err != nil {
+			log.WithError(err).Errorln("Can't update seen message in DB")
+		}
+	}
+
+	if len(resultMessage) == 0 {
+		return model.NoSecretMessageFoundMessage
 	}
 	return resultMessage
 }
