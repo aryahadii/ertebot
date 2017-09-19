@@ -5,5 +5,5 @@ type Person struct {
 	FirstName    string
 	LastName     string
 	Username     string
-	LastUseEpoch int
+	LastUseEpoch int64
 }
