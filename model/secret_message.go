@@ -5,6 +5,6 @@ type SecretMessage struct {
 	SenderID         string
 	SenderUsername   string
 	ReceiverUsername string
-	SendEpoch        int
-	SeenEpoch        int
+	SendEpoch        int64
+	SeenEpoch        int64
 }

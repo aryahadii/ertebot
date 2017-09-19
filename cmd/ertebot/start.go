@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/updater"
 )
 
@@ -17,6 +18,9 @@ func init() {
 
 func start(cmd *cobra.Command, args []string) {
 	// logVersion()
+
+	db.NewMongoDB()
+	defer db.Close()
 
 	updater.Update()
 }

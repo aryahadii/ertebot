@@ -1,5 +1,5 @@
-hash: 3d3c756b6c6bb944b937d09a34a0dce0c05eadc7e3e628e8d63f09a8f833e316
-updated: 2017-09-18T02:12:16.382011+04:30
+hash: 992337b0fd4f8ba2d0cfa8021e77766ae84e4d7fff07ae706597590d5b8b568a
+updated: 2017-09-19T09:53:28.850657+04:30
 imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
@@ -22,6 +22,8 @@ imports:
   subpackages:
   - unix
   - windows
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
 - name: gopkg.in/telegram-bot-api.v4
   version: 0a57807db79efce7f6719fbb2c0e0f83fda79aec
 testImports: []
