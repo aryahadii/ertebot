@@ -14,7 +14,7 @@ import (
 func handleCommand(message *botAPI.Message) string {
 	// Update LastUseEpoch or Create new user if it's needed
 	person := &model.Person{}
-	err := db.PeopleCollection.Find(bson.M{"userid": message.From.ID}).One(person)
+	err := db.PeopleCollection.Find(bson.M{"userid": strconv.ToLower(message.From.ID)}).One(person)
 	if err != nil {
 		person = &model.Person{
 			UserID:       strconv.Itoa(message.From.ID),
