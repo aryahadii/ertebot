@@ -19,7 +19,7 @@ const (
 
 func NewMongoDB() {
 	var err error
-	session, err = mgo.Dial("aryaha.com:27017")
+	session, err = mgo.Dial("mongodb:27017")
 	if err != nil {
 		log.WithError(err).Fatalln("MongoDB session can't be created")
 	}
