@@ -1,20 +1,21 @@
 package handler
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	cache "github.com/patrickmn/go-cache"
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
 	"gopkg.in/mgo.v2/bson"
 	botAPI "gopkg.in/telegram-bot-api.v4"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func handleCommand(message *botAPI.Message) string {
 	// Update LastUseEpoch or Create new user if it's needed
 	person := &model.Person{}
-	err := db.PeopleCollection.Find(bson.M{"userid": strconv.ToLower(message.From.ID)}).One(person)
+	err := db.PeopleCollection.Find(bson.M{"userid": strconv.Itoa(message.From.ID)}).One(person)
 	if err != nil {
 		person = &model.Person{
 			UserID:       strconv.Itoa(message.From.ID),
