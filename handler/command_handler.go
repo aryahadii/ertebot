@@ -1,53 +1,26 @@
 package handler
 
 import (
-	"strconv"
-	"strings"
-	"time"
-
-	cache "github.com/patrickmn/go-cache"
-	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
-	"gopkg.in/mgo.v2/bson"
+	"gitlab.com/arha/Ertebot/ui/keyboard"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
-func handleCommand(message *botAPI.Message) string {
-	// Update LastUseEpoch or Create new user if it's needed
-	person := &model.Person{}
-	err := db.PeopleCollection.Find(bson.M{"userid": strconv.Itoa(message.From.ID)}).One(person)
-	if err != nil {
-		person = &model.Person{
-			UserID:       strconv.Itoa(message.From.ID),
-			FirstName:    message.From.FirstName,
-			LastName:     message.From.LastName,
-			Username:     strings.ToLower(message.From.UserName),
-			LastUseEpoch: time.Now().Unix(),
-		}
-
-		db.PeopleCollection.Insert(person)
-	} else {
-		person.LastUseEpoch = time.Now().Unix()
-		db.PeopleCollection.Update(&model.Person{Username: person.Username}, person)
-	}
+func handleCommand(message *botAPI.Message) (string, interface{}) {
 
 	// Handle commands
 	if message.Command() == model.StartCommand {
-		return model.WelcomeMessage
+		return model.WelcomeMessage, nil
 	}
-	if message.Command() == model.NewMessageCommand {
-		state := &model.UserState{
-			Command: model.NewMessageCommand,
-		}
-		userState.Set(strconv.Itoa(message.From.ID), *state, cache.DefaultExpiration)
-		return "متن پیام را وارد کنید"
+	if message.Command() == model.NewMessageRawCommand {
+		return handleNewMessage(message)
 	}
-	if message.Command() == model.InboxCommand {
-		return HandleInboxCommand(message)
+	if message.Command() == model.InboxRawCommand {
+		return handleInboxCommand(message)
 	}
-	if message.Command() == model.HelpCommand {
-		return HandleHelpCommand(message)
+	if message.Command() == model.HelpRawCommand {
+		return handleHelpCommand(message)
 	}
 
-	return "دستور به درستی وارد نشده"
+	return "دستور به درستی وارد نشده", keyboard.NewMainKeyboard()
 }

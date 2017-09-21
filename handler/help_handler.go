@@ -2,9 +2,10 @@ package handler
 
 import (
 	"gitlab.com/arha/Ertebot/model"
+	"gitlab.com/arha/Ertebot/ui/keyboard"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
-func HandleHelpCommand(message *botAPI.Message) string {
-	return model.HelpCommandMessage
+func handleHelpCommand(message *botAPI.Message) (string, interface{}) {
+	return model.HelpCommandMessage, keyboard.NewMainKeyboard()
 }

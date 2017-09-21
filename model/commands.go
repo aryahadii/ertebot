@@ -1,8 +1,13 @@
 package model
 
 const (
-	StartCommand      = "start"
-	NewMessageCommand = "newmessage"
-	InboxCommand      = "inbox"
-	HelpCommand       = "help"
+	StartCommand         = "start"
+	NewMessageRawCommand = "newmessage"
+	InboxRawCommand      = "inbox"
+	HelpRawCommand       = "help"
+
+	BackCommand       = "بازگشت"
+	NewMessageCommand = "پیام جدید"
+	InboxCommand      = "صندوق پستی"
+	HelpCommand       = "راهنما"
 )

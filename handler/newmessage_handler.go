@@ -9,16 +9,25 @@ import (
 	cache "github.com/patrickmn/go-cache"
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
+	"gitlab.com/arha/Ertebot/ui/keyboard"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
-func handleNewMessageArgs(message *botAPI.Message, state model.UserState) string {
+func handleNewMessage(message *botAPI.Message) (string, interface{}) {
+	state := &model.UserState{
+		Command: model.NewMessageCommand,
+	}
+	userState.Set(strconv.Itoa(message.From.ID), *state, cache.DefaultExpiration)
+	return model.NewMessageCommandMessageInputMessage, keyboard.NewBackKeyboard()
+}
+
+func handleNewMessageArgs(message *botAPI.Message, state model.UserState) (string, interface{}) {
 	state.Args = append(state.Args, message.Text)
 	userState.Set(strconv.Itoa(message.From.ID), state, cache.DefaultExpiration)
 
 	argsLen := len(state.Args)
 	if argsLen == 1 {
-		return "نام کاربری فرد موردنظر را وارد کن"
+		return model.NewMessageCommandUsernameMessage, keyboard.NewBackKeyboard()
 	} else {
 		secretMessage := &model.SecretMessage{
 			Message:          state.Args[0].(string),
@@ -31,9 +40,9 @@ func handleNewMessageArgs(message *botAPI.Message, state model.UserState) string
 		err := db.MessagesCollection.Insert(secretMessage)
 		if err != nil {
 			log.WithError(err).Errorln("Can't send message")
-			return "خطایی پیش آمد! دوباره تلاش کنید"
+			return model.NewMessageCommandSendErrorMessage, keyboard.NewMainKeyboard()
 		}
 
-		return "پیام ارسال شد"
+		return model.NewMessageCommandSentMessage, keyboard.NewMainKeyboard()
 	}
 }

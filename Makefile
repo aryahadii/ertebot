@@ -1,5 +1,5 @@
 ROOT := gitlab.com/arha/Ertebot
-GO_VARS ?= CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+GO_VARS ?= CGO_ENABLED=0 GOOS=darwin GOARCH=amd64
 GO ?= go
 GIT ?= git
 COMMIT := $(shell $(GIT) rev-parse HEAD)

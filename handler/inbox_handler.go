@@ -8,20 +8,21 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
+	"gitlab.com/arha/Ertebot/ui/keyboard"
 	"gopkg.in/mgo.v2/bson"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
-func HandleInboxCommand(message *botAPI.Message) string {
+func handleInboxCommand(message *botAPI.Message) (string, interface{}) {
 	if len(message.From.UserName) == 0 {
 		log.WithField("User", message.From).Infoln("User doesn't have username")
-		return model.NoUsernameError
+		return model.NoUsernameError, keyboard.NewMainKeyboard()
 	}
 
 	var inboxMessages []model.SecretMessage
 	err := db.MessagesCollection.Find(bson.M{"receiverusername": strings.ToLower(message.From.UserName)}).All(&inboxMessages)
 	if err != nil {
-		return model.NoSecretMessageFoundMessage
+		return model.NoSecretMessageFoundMessage, keyboard.NewMainKeyboard()
 	}
 
 	resultMessage := ""
@@ -40,7 +41,7 @@ func HandleInboxCommand(message *botAPI.Message) string {
 	}
 
 	if len(resultMessage) == 0 {
-		return model.NoSecretMessageFoundMessage
+		return model.NoSecretMessageFoundMessage, keyboard.NewMainKeyboard()
 	}
-	return resultMessage
+	return resultMessage, keyboard.NewMainKeyboard()
 }
