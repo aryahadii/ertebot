@@ -39,7 +39,8 @@ func SortMessagesByTime(messages []model.SecretMessage) []model.SecretMessage {
 
 func ThreadToStringSlice(thread []model.SecretMessage) string {
 	threadMessages := ""
-	for _, message := range thread {
+	for i, _ := range thread {
+		message := thread[len(thread)-i-1]
 		threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, message.SenderID, message.Message)
 	}
 	return threadMessages
