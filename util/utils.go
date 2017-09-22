@@ -37,11 +37,23 @@ func SortMessagesByTime(messages []model.SecretMessage) []model.SecretMessage {
 	return messages
 }
 
-func ThreadToStringSlice(thread []model.SecretMessage) string {
+func ThreadToStringSlice(thread []model.SecretMessage, myID string) string {
 	threadMessages := ""
 	for i, _ := range thread {
 		message := thread[len(thread)-i-1]
-		threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, message.SenderID, message.Message)
+		if myID == message.SenderID {
+			threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, "من", message.Message)
+		} else {
+			if myID == message.ThreadOwnerID {
+				babeName := message.SenderUsername
+				if len(babeName) == 0 {
+					babeName = "او"
+				}
+				threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, babeName, message.Message)
+			} else {
+				threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, message.SenderID, message.Message)
+			}
+		}
 	}
 	return threadMessages
 }

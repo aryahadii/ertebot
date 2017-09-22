@@ -26,6 +26,7 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 		msg.ReplyMarkup = keyboard.NewMainKeyboard()
 		return []botAPI.Chattable{msg}
 	}
+
 	var inboxMessages []model.SecretMessage
 	err := db.MessagesCollection.Find(bson.M{"receiverusername": strings.ToLower(user.UserName)}).All(&inboxMessages)
 	if err != nil {
@@ -78,12 +79,19 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	reply := model.InboxReplyCallback + model.CallbackSeparator + resultMessages[current_message][0].ThreadOwnerID + model.CallbackSeparator + resultMessages[current_message][0].SenderID + model.CallbackSeparator + resultMessages[current_message][0].SenderUsername
 	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, reply, backless, fwrdless)
 
+	// Add my messages
+	current_messages := resultMessages[current_message]
+	var myMessages []model.SecretMessage
+	err = db.MessagesCollection.Find(bson.M{"senderid": strconv.Itoa(user.ID), "threadownerid": current_messages[0].ThreadOwnerID}).All(&myMessages)
+	current_messages = append(current_messages, myMessages...)
+	current_messages = util.SortMessagesByTime(current_messages)
+
 	if len(callback) > 0 {
-		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, util.ThreadToStringSlice(resultMessages[current_message]))
+		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, util.ThreadToStringSlice(current_messages, strconv.Itoa(user.ID)))
 		editReplyMarkup := botAPI.NewEditMessageReplyMarkup(chat.ID, callbackQuery.Message.MessageID, inboxKeyboard)
 		return []botAPI.Chattable{editMsgText, editReplyMarkup}
 	} else {
-		msg := botAPI.NewMessage(chat.ID, util.ThreadToStringSlice(resultMessages[current_message]))
+		msg := botAPI.NewMessage(chat.ID, util.ThreadToStringSlice(current_messages, strconv.Itoa(user.ID)))
 		msg.ReplyMarkup = inboxKeyboard
 		return []botAPI.Chattable{msg}
 	}
