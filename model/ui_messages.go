@@ -4,6 +4,7 @@ const (
 	WelcomeMessage  = "خوش آمدی!"
 	NoUsernameError = "برای استفاده از این بات باید یوزرنیم داشته باشید"
 
+	WrongCommandMessage                  = "دستور به درستی وارد نشده"
 	BackCommandMessage                   = "بازگشت انجام شد"
 	NewMessageCommandMessageInputMessage = "متن پیام را بنویسید و دکمه‌ی ارسال را بزنید"
 	NewMessageCommandUsernameMessage     = "نام کاربری فرد مورد نظر را وارد کنید"

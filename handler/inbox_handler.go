@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,24 +14,30 @@ import (
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
-func handleInboxCommand(message *botAPI.Message) (string, interface{}) {
-	if len(message.From.UserName) == 0 {
-		log.WithField("User", message.From).Infoln("User doesn't have username")
-		return model.NoUsernameError, keyboard.NewMainKeyboard()
+func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQuery, user *botAPI.User, chat *botAPI.Chat) []botAPI.Chattable {
+	var callback []string
+	if callbackQuery != nil {
+		callback = strings.Split(callbackQuery.Data, model.CallbackSeparator)
 	}
 
+	if len(user.UserName) == 0 {
+		log.WithField("User", user).Infoln("User doesn't have username")
+		msg := botAPI.NewMessage(chat.ID, model.NoUsernameError)
+		msg.ReplyMarkup = keyboard.NewMainKeyboard()
+		return []botAPI.Chattable{msg}
+	}
 	var inboxMessages []model.SecretMessage
-	err := db.MessagesCollection.Find(bson.M{"receiverusername": strings.ToLower(message.From.UserName)}).All(&inboxMessages)
+	err := db.MessagesCollection.Find(bson.M{"receiverusername": strings.ToLower(user.UserName)}).All(&inboxMessages)
 	if err != nil {
-		return model.NoSecretMessageFoundMessage, keyboard.NewMainKeyboard()
+		msg := botAPI.NewMessage(chat.ID, model.NoSecretMessageFoundMessage)
+		msg.ReplyMarkup = keyboard.NewMainKeyboard()
+		return []botAPI.Chattable{msg}
 	}
 
-	resultMessage := ""
+	// Find messages
+	var resultMessages []string
 	for _, msg := range inboxMessages {
-		if msg.SeenEpoch != 0 {
-			continue
-		}
-		resultMessage += fmt.Sprintf(model.InboxMessagesTemplate, msg.SenderID, msg.Message)
+		resultMessages = append(resultMessages, fmt.Sprintf(model.InboxMessagesTemplate, msg.SenderID, msg.Message))
 
 		seenMsg := msg
 		seenMsg.SeenEpoch = time.Now().Unix()
@@ -40,8 +47,42 @@ func handleInboxCommand(message *botAPI.Message) (string, interface{}) {
 		}
 	}
 
-	if len(resultMessage) == 0 {
-		return model.NoSecretMessageFoundMessage, keyboard.NewMainKeyboard()
+	// No message
+	if len(resultMessages) == 0 {
+		msg := botAPI.NewMessage(chat.ID, model.NoSecretMessageFoundMessage)
+		msg.ReplyMarkup = keyboard.NewMainKeyboard()
+		return []botAPI.Chattable{msg}
 	}
-	return resultMessage, keyboard.NewMainKeyboard()
+
+	current_message := 0
+	if len(callback) > 0 {
+		var err error
+		current_message, err = strconv.Atoi(callback[1])
+		if err != nil {
+			log.WithError(err).Errorln("Can't extract current_message_index")
+			current_message = 0
+		}
+	}
+
+	// Create inbox's inline keyboard
+	fwrdless, backless := false, false
+	if len(resultMessages) <= current_message+1 {
+		fwrdless = true
+	}
+	if current_message == 0 {
+		backless = true
+	}
+	back := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message-1)
+	fwrd := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message+1)
+	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, backless, fwrdless)
+
+	if len(callback) > 0 {
+		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, resultMessages[current_message])
+		editReplyMarkup := botAPI.NewEditMessageReplyMarkup(chat.ID, callbackQuery.Message.MessageID, inboxKeyboard)
+		return []botAPI.Chattable{editMsgText, editReplyMarkup}
+	} else {
+		msg := botAPI.NewMessage(chat.ID, resultMessages[current_message])
+		msg.ReplyMarkup = inboxKeyboard
+		return []botAPI.Chattable{msg}
+	}
 }

@@ -16,7 +16,7 @@ var (
 	userState = cache.New(30*time.Minute, 10*time.Minute)
 )
 
-func Handle(message *botAPI.Message) botAPI.MessageConfig {
+func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 	updateUseEpoch(message)
 
 	msg := botAPI.NewMessage(message.Chat.ID, model.SomeErrorOccured)
@@ -26,7 +26,7 @@ func Handle(message *botAPI.Message) botAPI.MessageConfig {
 	} else if message.Text == model.BackCommand {
 		msg.Text, msg.ReplyMarkup = handleBackCommand(message)
 	} else if message.Text == model.InboxCommand {
-		msg.Text, msg.ReplyMarkup = handleInboxCommand(message)
+		return handleInboxCommand(message, nil, message.From, message.Chat)
 	} else if message.Text == model.HelpCommand {
 		msg.Text, msg.ReplyMarkup = handleHelpCommand(message)
 	} else if message.Text == model.NewMessageCommand {
@@ -40,7 +40,20 @@ func Handle(message *botAPI.Message) botAPI.MessageConfig {
 		}
 	}
 
-	return msg
+	return []botAPI.Chattable{msg}
+}
+
+func HandleCallback(callbackQuery *botAPI.CallbackQuery) []botAPI.Chattable {
+	var callback []string
+	if callbackQuery != nil {
+		callback = strings.Split(callbackQuery.Data, model.CallbackSeparator)
+	}
+
+	if callback[0] == model.InboxUpdateCallback {
+		return handleInboxCommand(nil, callbackQuery, callbackQuery.From, callbackQuery.Message.Chat)
+	}
+
+	return []botAPI.Chattable{}
 }
 
 func updateUseEpoch(message *botAPI.Message) {

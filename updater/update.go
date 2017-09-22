@@ -35,11 +35,15 @@ func Update() {
 	}
 
 	for update := range updates {
-		if update.Message == nil {
-			continue
+		var msgs []botAPI.Chattable
+		if update.Message != nil {
+			msgs = handler.HandleMessage(update.Message)
+		} else {
+			msgs = handler.HandleCallback(update.CallbackQuery)
 		}
 
-		msg := handler.Handle(update.Message)
-		bot.Send(msg)
+		for _, msg := range msgs {
+			bot.Send(msg)
+		}
 	}
 }

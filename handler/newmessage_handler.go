@@ -10,6 +10,7 @@ import (
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
 	"gitlab.com/arha/Ertebot/ui/keyboard"
+	"gitlab.com/arha/Ertebot/util"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
 
@@ -29,15 +30,24 @@ func handleNewMessageArgs(message *botAPI.Message, state model.UserState) (strin
 	if argsLen == 1 {
 		return model.NewMessageCommandUsernameMessage, keyboard.NewBackKeyboard()
 	} else {
+		receiverUsername := strings.ToLower(strings.TrimLeft(state.Args[1].(string), "@"))
+		id, err := util.GetUserID(receiverUsername)
+		if err != nil {
+			log.WithField("Receiver", receiverUsername).Debugln("Doesn't have userID")
+		}
+
 		secretMessage := &model.SecretMessage{
 			Message:          state.Args[0].(string),
 			SenderID:         strconv.Itoa(message.From.ID),
 			SenderUsername:   strings.ToLower(message.From.UserName),
-			ReceiverUsername: strings.ToLower(strings.TrimLeft(state.Args[1].(string), "@")),
+			ReceiverUsername: receiverUsername,
+			ReceiverID:       id,
 			SendEpoch:        time.Now().Unix(),
 			SeenEpoch:        0,
 		}
-		err := db.MessagesCollection.Insert(secretMessage)
+		log.Debugln(secretMessage)
+
+		err = db.MessagesCollection.Insert(secretMessage)
 		if err != nil {
 			log.WithError(err).Errorln("Can't send message")
 			return model.NewMessageCommandSendErrorMessage, keyboard.NewMainKeyboard()

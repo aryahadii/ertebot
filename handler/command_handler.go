@@ -7,7 +7,6 @@ import (
 )
 
 func handleCommand(message *botAPI.Message) (string, interface{}) {
-
 	// Handle commands
 	if message.Command() == model.StartCommand {
 		return model.WelcomeMessage, nil
@@ -15,12 +14,12 @@ func handleCommand(message *botAPI.Message) (string, interface{}) {
 	if message.Command() == model.NewMessageRawCommand {
 		return handleNewMessage(message)
 	}
-	if message.Command() == model.InboxRawCommand {
-		return handleInboxCommand(message)
-	}
+	//	if message.Command() == model.InboxRawCommand {
+	//		return handleInboxCommand(message, []string{})
+	//	}
 	if message.Command() == model.HelpRawCommand {
 		return handleHelpCommand(message)
 	}
 
-	return "دستور به درستی وارد نشده", keyboard.NewMainKeyboard()
+	return model.WrongCommandMessage, keyboard.NewMainKeyboard()
 }
