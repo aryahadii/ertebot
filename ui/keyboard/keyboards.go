@@ -22,11 +22,12 @@ func NewBackKeyboard() botAPI.ReplyKeyboardMarkup {
 	return botAPI.NewReplyKeyboard(row)
 }
 
-func NewInboxInlineKeyboard(back, fwrd string, backless, fwrdless bool) botAPI.InlineKeyboardMarkup {
+func NewInboxInlineKeyboard(back, fwrd, reply string, backless, fwrdless bool) botAPI.InlineKeyboardMarkup {
 	var row []botAPI.InlineKeyboardButton
 	if !backless {
 		row = append(row, botAPI.NewInlineKeyboardButtonData("<", back))
 	}
+	row = append(row, botAPI.NewInlineKeyboardButtonData("پاسخ", reply))
 	if !fwrdless {
 		row = append(row, botAPI.NewInlineKeyboardButtonData(">", fwrd))
 	}

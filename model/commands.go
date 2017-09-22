@@ -9,5 +9,6 @@ const (
 	BackCommand       = "بازگشت"
 	NewMessageCommand = "پیام جدید"
 	InboxCommand      = "صندوق پستی"
+	ReplyCommand      = "پاسخ"
 	HelpCommand       = "راهنما"
 )

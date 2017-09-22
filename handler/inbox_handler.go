@@ -75,7 +75,8 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	}
 	back := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message-1)
 	fwrd := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message+1)
-	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, backless, fwrdless)
+	reply := model.InboxReplyCallback + model.CallbackSeparator + resultMessages[current_message][0].ThreadOwnerID + model.CallbackSeparator + resultMessages[current_message][0].SenderID + model.CallbackSeparator + resultMessages[current_message][0].SenderUsername
+	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, reply, backless, fwrdless)
 
 	if len(callback) > 0 {
 		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, util.ThreadToStringSlice(resultMessages[current_message]))

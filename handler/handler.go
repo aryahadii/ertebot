@@ -36,6 +36,8 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 		if found {
 			if (state.(model.UserState)).Command == model.NewMessageCommand {
 				msg.Text, msg.ReplyMarkup = handleNewMessageArgs(message, state.(model.UserState))
+			} else if (state.(model.UserState)).Command == model.ReplyCommand {
+				msg.Text, msg.ReplyMarkup = handleReplyCommandArgs(message, state.(model.UserState))
 			}
 		}
 	}
@@ -51,6 +53,8 @@ func HandleCallback(callbackQuery *botAPI.CallbackQuery) []botAPI.Chattable {
 
 	if callback[0] == model.InboxUpdateCallback {
 		return handleInboxCommand(nil, callbackQuery, callbackQuery.From, callbackQuery.Message.Chat)
+	} else if callback[0] == model.InboxReplyCallback {
+		return handleReplyCommand(nil, callbackQuery, callbackQuery.From, callbackQuery.Message.Chat)
 	}
 
 	return []botAPI.Chattable{}
