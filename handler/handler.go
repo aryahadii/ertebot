@@ -27,6 +27,8 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 		msg.Text, msg.ReplyMarkup = handleBackCommand(message)
 	} else if message.Text == model.InboxCommand {
 		return handleInboxCommand(message, nil, message.From, message.Chat)
+	} else if message.Text == model.LinkCommand {
+		msg.Text, msg.ReplyMarkup = handleMyLinkCommand(message)
 	} else if message.Text == model.HelpCommand {
 		msg.Text, msg.ReplyMarkup = handleHelpCommand(message)
 	} else if message.Text == model.NewMessageCommand {
@@ -38,6 +40,8 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 				msg.Text, msg.ReplyMarkup = handleNewMessageArgs(message, state.(model.UserState))
 			} else if (state.(model.UserState)).Command == model.ReplyCommand {
 				msg.Text, msg.ReplyMarkup = handleReplyCommandArgs(message, state.(model.UserState))
+			} else if (state.(model.UserState)).Command == model.NewMessageByLinkCommand {
+				msg.Text, msg.ReplyMarkup = handleNewMessageByLinkArgs(message, state.(model.UserState))
 			}
 		}
 	}

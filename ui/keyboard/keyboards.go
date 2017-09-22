@@ -11,7 +11,8 @@ func NewMainKeyboard() botAPI.ReplyKeyboardMarkup {
 	row1 := botAPI.NewKeyboardButtonRow(newMessageKey, inboxKey)
 
 	helpKey := botAPI.NewKeyboardButton(model.HelpCommand)
-	row2 := botAPI.NewKeyboardButtonRow(helpKey)
+	linkKey := botAPI.NewKeyboardButton(model.LinkCommand)
+	row2 := botAPI.NewKeyboardButtonRow(helpKey, linkKey)
 
 	return botAPI.NewReplyKeyboard(row1, row2)
 }

@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sort"
@@ -12,12 +14,30 @@ import (
 )
 
 func GetUserID(username string) (string, error) {
-	var id string
-	err := db.PeopleCollection.Find(bson.M{"username": strings.ToLower(username)}).One(&id)
+	var person model.Person
+	err := db.PeopleCollection.Find(bson.M{"username": strings.ToLower(username)}).One(&person)
 	if err != nil {
-		return id, errors.New("Not found")
+		return person.UserID, errors.New("Not found")
 	}
-	return id, nil
+	return person.UserID, nil
+}
+
+func GetHashID(userID string) (string, error) {
+	var person model.Person
+	err := db.PeopleCollection.Find(bson.M{"userid": userID}).One(&person)
+	if err != nil {
+		return person.HashID, err
+	}
+	return person.HashID, nil
+}
+
+func GetPersonByHashID(hashID string) (model.Person, error) {
+	var person model.Person
+	err := db.PeopleCollection.Find(bson.M{"hashid": hashID}).One(&person)
+	if err != nil {
+		return person, errors.New("Not found")
+	}
+	return person, nil
 }
 
 func SortInboxMessagesByTime(messages map[string]([]model.SecretMessage)) []([]model.SecretMessage) {
@@ -56,4 +76,10 @@ func ThreadToStringSlice(thread []model.SecretMessage, myID string) string {
 		}
 	}
 	return threadMessages
+}
+
+func GetMD5(text string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

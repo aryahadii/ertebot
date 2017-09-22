@@ -22,4 +22,6 @@ const (
 	InboxMessagesTemplate = "%v: %s\n\n"
 
 	SomeErrorOccured = "خطایی رخ داد! دوباره امتحان کنید"
+
+	LinkTemplate = "https://telegram.me/RaheErteBot?start=%s"
 )

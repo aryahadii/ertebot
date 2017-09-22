@@ -9,6 +9,9 @@ import (
 func handleCommand(message *botAPI.Message) (string, interface{}) {
 	// Handle commands
 	if message.Command() == model.StartCommand {
+		if len(message.CommandArguments()) > 0 {
+			return handleNewMessageByLink(message)
+		}
 		return model.WelcomeMessage, nil
 	}
 	if message.Command() == model.NewMessageRawCommand {

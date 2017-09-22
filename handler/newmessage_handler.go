@@ -56,3 +56,46 @@ func handleNewMessageArgs(message *botAPI.Message, state model.UserState) (strin
 		return model.NewMessageCommandSentMessage, keyboard.NewMainKeyboard()
 	}
 }
+
+func handleNewMessageByLink(message *botAPI.Message) (string, interface{}) {
+	state := &model.UserState{
+		Command: model.NewMessageByLinkCommand,
+		Args:    []interface{}{message.CommandArguments()},
+	}
+	userState.Set(strconv.Itoa(message.From.ID), *state, cache.DefaultExpiration)
+	return model.NewMessageCommandMessageInputMessage, keyboard.NewBackKeyboard()
+}
+
+func handleNewMessageByLinkArgs(message *botAPI.Message, state model.UserState) (string, interface{}) {
+	state.Args = append(state.Args, message.Text)
+	userState.Set(strconv.Itoa(message.From.ID), state, cache.DefaultExpiration)
+
+	argsLen := len(state.Args)
+	if argsLen == 2 {
+		receiverHashID := state.Args[0].(string)
+		person, err := util.GetPersonByHashID(receiverHashID)
+		if err != nil {
+			log.WithField("Receiver HashID", receiverHashID).Debugln("Doesn't have userID")
+		}
+
+		secretMessage := &model.SecretMessage{
+			Message:          state.Args[1].(string),
+			SenderID:         strconv.Itoa(message.From.ID),
+			SenderUsername:   strings.ToLower(message.From.UserName),
+			ReceiverUsername: person.Username,
+			ReceiverID:       person.UserID,
+			SendEpoch:        time.Now().Unix(),
+			SeenEpoch:        0,
+		}
+		log.Debugln(secretMessage)
+
+		err = db.MessagesCollection.Insert(secretMessage)
+		if err != nil {
+			log.WithError(err).Errorln("Can't send message")
+			return model.NewMessageCommandSendErrorMessage, keyboard.NewMainKeyboard()
+		}
+
+		return model.NewMessageCommandSentMessage, keyboard.NewMainKeyboard()
+	}
+	return model.SomeErrorOccured, keyboard.NewMainKeyboard()
+}

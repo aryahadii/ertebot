@@ -6,9 +6,11 @@ const (
 	InboxRawCommand      = "inbox"
 	HelpRawCommand       = "help"
 
-	BackCommand       = "بازگشت"
-	NewMessageCommand = "پیام جدید"
-	InboxCommand      = "صندوق پستی"
-	ReplyCommand      = "پاسخ"
-	HelpCommand       = "راهنما"
+	BackCommand             = "بازگشت"
+	NewMessageCommand       = "پیام جدید"
+	NewMessageByLinkCommand = "پیام با لینک"
+	InboxCommand            = "صندوق پستی"
+	ReplyCommand            = "پاسخ"
+	LinkCommand             = "لینک من"
+	HelpCommand             = "راهنما"
 )
