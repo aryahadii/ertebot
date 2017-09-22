@@ -18,7 +18,7 @@ const (
 
 	NoSecretMessageFoundMessage = "پیامی یافت نشد"
 
-	InboxMessagesTemplate = "کاربر %v گفت\n%s\n\n"
+	InboxMessagesTemplate = "%v: %s\n\n"
 
 	SomeErrorOccured = "خطایی رخ داد! دوباره امتحان کنید"
 )

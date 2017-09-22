@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
 	"gitlab.com/arha/Ertebot/ui/keyboard"
+	"gitlab.com/arha/Ertebot/util"
 	"gopkg.in/mgo.v2/bson"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
@@ -35,9 +35,9 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	}
 
 	// Find messages
-	var resultMessages []string
+	resultMessagesMap := make(map[string]([]model.SecretMessage))
 	for _, msg := range inboxMessages {
-		resultMessages = append(resultMessages, fmt.Sprintf(model.InboxMessagesTemplate, msg.SenderID, msg.Message))
+		resultMessagesMap[msg.SenderID] = append(resultMessagesMap[msg.SenderID], msg)
 
 		seenMsg := msg
 		seenMsg.SeenEpoch = time.Now().Unix()
@@ -46,6 +46,7 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 			log.WithError(err).Errorln("Can't update seen message in DB")
 		}
 	}
+	resultMessages := util.SortInboxMessagesByTime(resultMessagesMap)
 
 	// No message
 	if len(resultMessages) == 0 {
@@ -77,11 +78,11 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, backless, fwrdless)
 
 	if len(callback) > 0 {
-		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, resultMessages[current_message])
+		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, util.ThreadToStringSlice(resultMessages[current_message]))
 		editReplyMarkup := botAPI.NewEditMessageReplyMarkup(chat.ID, callbackQuery.Message.MessageID, inboxKeyboard)
 		return []botAPI.Chattable{editMsgText, editReplyMarkup}
 	} else {
-		msg := botAPI.NewMessage(chat.ID, resultMessages[current_message])
+		msg := botAPI.NewMessage(chat.ID, util.ThreadToStringSlice(resultMessages[current_message]))
 		msg.ReplyMarkup = inboxKeyboard
 		return []botAPI.Chattable{msg}
 	}
