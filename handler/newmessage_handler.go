@@ -85,6 +85,7 @@ func handleNewMessageByLinkArgs(message *botAPI.Message, state model.UserState) 
 			SenderUsername:   strings.ToLower(message.From.UserName),
 			ReceiverUsername: person.Username,
 			ReceiverID:       person.UserID,
+			ThreadOwnerID:    strconv.Itoa(message.From.ID),
 			SendEpoch:        time.Now().Unix(),
 			SeenEpoch:        0,
 		}
