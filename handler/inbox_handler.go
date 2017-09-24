@@ -82,7 +82,15 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	// Add my messages
 	current_messages := sortedAllMessages[current_message]
 	var myMessages []model.SecretMessage
-	db.MessagesCollection.Find(bson.M{"senderid": strconv.Itoa(user.ID), "threadownerid": current_messages[0].ThreadOwnerID, "receiverid": current_messages[0].SenderID}).All(&myMessages)
+	db.MessagesCollection.Find(bson.M{
+		"senderid":      strconv.Itoa(user.ID),
+		"threadownerid": current_messages[0].ThreadOwnerID,
+		"$or": []interface{}{
+			bson.M{"receiverid": "", "receiverusername": current_messages[0].SenderUsername},
+			bson.M{"receiverid": current_messages[0].SenderID},
+		},
+	}).All(&myMessages)
+
 	current_messages = append(current_messages, myMessages...)
 	current_messages = util.SortMessagesByTime(current_messages)
 
