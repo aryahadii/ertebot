@@ -42,6 +42,7 @@ func handleNewMessageArgs(message *botAPI.Message, state model.UserState) (strin
 			SenderUsername:   strings.ToLower(message.From.UserName),
 			ReceiverUsername: receiverUsername,
 			ReceiverID:       id,
+			ThreadOwnerID:    strconv.Itoa(message.From.ID),
 			SendEpoch:        time.Now().Unix(),
 			SeenEpoch:        0,
 		}
