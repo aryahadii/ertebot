@@ -8,6 +8,7 @@ import (
 	cache "github.com/patrickmn/go-cache"
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
+	"gitlab.com/arha/Ertebot/util"
 	"gopkg.in/mgo.v2/bson"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
@@ -74,13 +75,13 @@ func updateUseEpoch(message *botAPI.Message) {
 			FirstName:    message.From.FirstName,
 			LastName:     message.From.LastName,
 			Username:     strings.ToLower(message.From.UserName),
-			HashID:       util.GetHashID(stconv.Itoa(message.From.ID)),
+			HashID:       util.GetMD5(strconv.Itoa(message.From.ID))[:model.HashIDLength],
 			LastUseEpoch: time.Now().Unix(),
 		}
 
 		db.PeopleCollection.Insert(person)
 	} else {
 		person.LastUseEpoch = time.Now().Unix()
-		db.PeopleCollection.Update(&model.Person{Username: person.Username}, person)
+		//db.PeopleCollection.Update(&model.Person{Username: person.Username}, person)
 	}
 }
