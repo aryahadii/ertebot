@@ -74,6 +74,7 @@ func updateUseEpoch(message *botAPI.Message) {
 			FirstName:    message.From.FirstName,
 			LastName:     message.From.LastName,
 			Username:     strings.ToLower(message.From.UserName),
+			HashID:       util.GetHashID(stconv.Itoa(message.From.ID)),
 			LastUseEpoch: time.Now().Unix(),
 		}
 
