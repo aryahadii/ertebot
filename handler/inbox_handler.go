@@ -20,26 +20,26 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 		callback = strings.Split(callbackQuery.Data, model.CallbackSeparator)
 	}
 
-	if len(user.UserName) == 0 {
-		log.WithField("User", user).Infoln("User doesn't have username")
-		msg := botAPI.NewMessage(chat.ID, model.NoUsernameError)
-		msg.ReplyMarkup = keyboard.NewMainKeyboard()
-		return []botAPI.Chattable{msg}
-	}
+	var allMessages []model.SecretMessage
+	db.MessagesCollection.Find(bson.M{
+		"$or": []interface{}{
+			bson.M{"receiverusername": strings.ToLower(user.UserName)},
+			bson.M{"receiverid": strconv.Itoa(user.ID)},
+		},
+	}).All(&allMessages)
 
-	var inboxMessages []model.SecretMessage
-	err := db.MessagesCollection.Find(bson.M{"receiverusername": strings.ToLower(user.UserName)}).All(&inboxMessages)
-	if err != nil {
+	if len(allMessages) == 0 {
 		msg := botAPI.NewMessage(chat.ID, model.NoSecretMessageFoundMessage)
 		msg.ReplyMarkup = keyboard.NewMainKeyboard()
 		return []botAPI.Chattable{msg}
 	}
 
-	// Find messages
-	resultMessagesMap := make(map[string]([]model.SecretMessage))
-	for _, msg := range inboxMessages {
-		resultMessagesMap[msg.SenderID] = append(resultMessagesMap[msg.SenderID], msg)
+	// Sort threads
+	receivedMessagesMap := make(map[string]([]model.SecretMessage))
+	for _, msg := range allMessages {
+		receivedMessagesMap[msg.ThreadOwnerID] = append(receivedMessagesMap[msg.ThreadOwnerID], msg)
 
+		// TODO: Make batch update
 		seenMsg := msg
 		seenMsg.SeenEpoch = time.Now().Unix()
 		err := db.MessagesCollection.Update(msg, seenMsg)
@@ -47,16 +47,10 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 			log.WithError(err).Errorln("Can't update seen message in DB")
 		}
 	}
-	resultMessages := util.SortInboxMessagesByTime(resultMessagesMap)
-
-	// No message
-	if len(resultMessages) == 0 {
-		msg := botAPI.NewMessage(chat.ID, model.NoSecretMessageFoundMessage)
-		msg.ReplyMarkup = keyboard.NewMainKeyboard()
-		return []botAPI.Chattable{msg}
-	}
+	sortedAllMessages := util.SortInboxMessagesByTime(receivedMessagesMap)
 
 	current_message := 0
+	// Check if message update is needed
 	if len(callback) > 0 {
 		var err error
 		current_message, err = strconv.Atoi(callback[1])
@@ -68,7 +62,7 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 
 	// Create inbox's inline keyboard
 	fwrdless, backless := false, false
-	if len(resultMessages) <= current_message+1 {
+	if len(sortedAllMessages) <= current_message+1 {
 		fwrdless = true
 	}
 	if current_message == 0 {
@@ -76,13 +70,19 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	}
 	back := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message-1)
 	fwrd := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message+1)
-	reply := model.InboxReplyCallback + model.CallbackSeparator + resultMessages[current_message][0].ThreadOwnerID + model.CallbackSeparator + resultMessages[current_message][0].SenderID + model.CallbackSeparator + resultMessages[current_message][0].SenderUsername
+	reply := model.InboxReplyCallback +
+		model.CallbackSeparator +
+		sortedAllMessages[current_message][0].ThreadOwnerID +
+		model.CallbackSeparator +
+		sortedAllMessages[current_message][0].SenderID +
+		model.CallbackSeparator +
+		sortedAllMessages[current_message][0].SenderUsername
 	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, reply, backless, fwrdless)
 
 	// Add my messages
-	current_messages := resultMessages[current_message]
+	current_messages := sortedAllMessages[current_message]
 	var myMessages []model.SecretMessage
-	err = db.MessagesCollection.Find(bson.M{"senderid": strconv.Itoa(user.ID), "threadownerid": current_messages[0].ThreadOwnerID}).All(&myMessages)
+	db.MessagesCollection.Find(bson.M{"senderid": strconv.Itoa(user.ID), "threadownerid": current_messages[0].ThreadOwnerID, "receiverid": current_messages[0].SenderID}).All(&myMessages)
 	current_messages = append(current_messages, myMessages...)
 	current_messages = util.SortMessagesByTime(current_messages)
 

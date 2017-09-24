@@ -11,6 +11,25 @@ type SecretMessage struct {
 	SeenEpoch        int64
 }
 
+func (m *SecretMessage) Equal(msg *SecretMessage) bool {
+	if m.Message != msg.Message {
+		return false
+	}
+	if m.SenderID != msg.SenderID || m.SenderUsername != msg.SenderUsername {
+		return false
+	}
+	if m.ReceiverID != msg.ReceiverID || m.ReceiverUsername != msg.ReceiverUsername {
+		return false
+	}
+	if m.ThreadOwnerID != msg.ThreadOwnerID {
+		return false
+	}
+	if m.SeenEpoch != msg.SeenEpoch || m.SendEpoch != msg.SendEpoch {
+		return false
+	}
+	return true
+}
+
 type SecretMessageNewFirst []SecretMessage
 
 func (m SecretMessageNewFirst) Len() int {

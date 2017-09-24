@@ -83,3 +83,17 @@ func GetMD5(text string) string {
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
+
+func UniqueMessages(msg []model.SecretMessage) []model.SecretMessage {
+	msgMap := make(map[model.SecretMessage]bool)
+	uniqueList := make([]model.SecretMessage, 0, len(msg))
+
+	for _, val := range msg {
+		if _, ok := msgMap[val]; !ok {
+			msgMap[val] = true
+			uniqueList = append(uniqueList, val)
+		}
+	}
+
+	return uniqueList
+}
