@@ -37,7 +37,8 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	// Sort threads
 	receivedMessagesMap := make(map[string]([]model.SecretMessage))
 	for _, msg := range allMessages {
-		receivedMessagesMap[msg.ThreadOwnerID] = append(receivedMessagesMap[msg.ThreadOwnerID], msg)
+		key := util.GetMD5(msg.ThreadOwnerID + msg.SenderID + msg.SenderUsername)
+		receivedMessagesMap[key] = append(receivedMessagesMap[key], msg)
 
 		// TODO: Make batch update
 		seenMsg := msg
