@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	botToken = "bot-token"
+	botToken = "419987007:AAFkHJPaj2bwW-mvY8g219ZIGFAXV8jzcws"
 )
 
 var (
@@ -20,7 +20,7 @@ func init() {
 	if err != nil {
 		log.WithError(err).Fatalln("Can't initialize bot")
 	}
-	bot.Debug = true
+	bot.Debug = false
 
 	log.Infof("Authorized on account %s", bot.Self.UserName)
 }
@@ -35,15 +35,17 @@ func Update() {
 	}
 
 	for update := range updates {
-		var msgs []botAPI.Chattable
-		if update.Message != nil {
-			msgs = handler.HandleMessage(update.Message)
-		} else {
-			msgs = handler.HandleCallback(update.CallbackQuery)
-		}
+		go func(update botAPI.Update) {
+			var msgs []botAPI.Chattable
+			if update.Message != nil {
+				msgs = handler.HandleMessage(update.Message)
+			} else {
+				msgs = handler.HandleCallback(update.CallbackQuery)
+			}
 
-		for _, msg := range msgs {
-			bot.Send(msg)
-		}
+			for _, msg := range msgs {
+				bot.Send(msg)
+			}
+		}(update)
 	}
 }
