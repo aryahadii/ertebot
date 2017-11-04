@@ -14,12 +14,6 @@ func handleCommand(message *botAPI.Message) (string, interface{}) {
 		}
 		return model.WelcomeMessage, nil
 	}
-	if message.Command() == model.NewMessageRawCommand {
-		return handleNewMessage(message)
-	}
-	//	if message.Command() == model.InboxRawCommand {
-	//		return handleInboxCommand(message, []string{})
-	//	}
 	if message.Command() == model.HelpRawCommand {
 		return handleHelpCommand(message)
 	}
