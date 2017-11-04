@@ -50,58 +50,57 @@ func handleInboxCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	}
 	sortedAllMessages := util.SortInboxMessagesByTime(receivedMessagesMap)
 
-	current_message := 0
+	currentMessage := 0
 	// Check if message update is needed
 	if len(callback) > 0 {
 		var err error
-		current_message, err = strconv.Atoi(callback[1])
+		currentMessage, err = strconv.Atoi(callback[1])
 		if err != nil {
-			log.WithError(err).Errorln("Can't extract current_message_index")
-			current_message = 0
+			log.WithError(err).Errorln("Can't extract currentMessage_index")
+			currentMessage = 0
 		}
 	}
 
 	// Create inbox's inline keyboard
 	fwrdless, backless := false, false
-	if len(sortedAllMessages) <= current_message+1 {
+	if len(sortedAllMessages) <= currentMessage+1 {
 		fwrdless = true
 	}
-	if current_message == 0 {
+	if currentMessage == 0 {
 		backless = true
 	}
-	back := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message-1)
-	fwrd := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(current_message+1)
+	back := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(currentMessage-1)
+	fwrd := model.InboxUpdateCallback + model.CallbackSeparator + strconv.Itoa(currentMessage+1)
 	reply := model.InboxReplyCallback +
 		model.CallbackSeparator +
-		sortedAllMessages[current_message][0].ThreadOwnerID +
+		sortedAllMessages[currentMessage][0].ThreadOwnerID +
 		model.CallbackSeparator +
-		sortedAllMessages[current_message][0].SenderID +
+		sortedAllMessages[currentMessage][0].SenderID +
 		model.CallbackSeparator +
-		sortedAllMessages[current_message][0].SenderUsername
+		sortedAllMessages[currentMessage][0].SenderUsername
 	inboxKeyboard := keyboard.NewInboxInlineKeyboard(back, fwrd, reply, backless, fwrdless)
 
 	// Add my messages
-	current_messages := sortedAllMessages[current_message]
+	currentMessages := sortedAllMessages[currentMessage]
 	var myMessages []model.SecretMessage
 	db.MessagesCollection.Find(bson.M{
 		"senderid":      strconv.Itoa(user.ID),
-		"threadownerid": current_messages[0].ThreadOwnerID,
+		"threadownerid": currentMessages[0].ThreadOwnerID,
 		"$or": []interface{}{
-			bson.M{"receiverid": "", "receiverusername": current_messages[0].SenderUsername},
-			bson.M{"receiverid": current_messages[0].SenderID},
+			bson.M{"receiverid": "", "receiverusername": currentMessages[0].SenderUsername},
+			bson.M{"receiverid": currentMessages[0].SenderID},
 		},
 	}).All(&myMessages)
 
-	current_messages = append(current_messages, myMessages...)
-	current_messages = util.SortMessagesByTime(current_messages)
+	currentMessages = append(currentMessages, myMessages...)
+	currentMessages = util.SortMessagesByTime(currentMessages)
 
 	if len(callback) > 0 {
-		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, util.ThreadToStringSlice(current_messages, strconv.Itoa(user.ID)))
+		editMsgText := botAPI.NewEditMessageText(chat.ID, callbackQuery.Message.MessageID, util.ThreadToStringSlice(currentMessages, strconv.Itoa(user.ID)))
 		editReplyMarkup := botAPI.NewEditMessageReplyMarkup(chat.ID, callbackQuery.Message.MessageID, inboxKeyboard)
 		return []botAPI.Chattable{editMsgText, editReplyMarkup}
-	} else {
-		msg := botAPI.NewMessage(chat.ID, util.ThreadToStringSlice(current_messages, strconv.Itoa(user.ID)))
-		msg.ReplyMarkup = inboxKeyboard
-		return []botAPI.Chattable{msg}
 	}
+	msg := botAPI.NewMessage(chat.ID, util.ThreadToStringSlice(currentMessages, strconv.Itoa(user.ID)))
+	msg.ReplyMarkup = inboxKeyboard
+	return []botAPI.Chattable{msg}
 }

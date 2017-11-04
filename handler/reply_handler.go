@@ -31,7 +31,7 @@ func handleReplyCommand(message *botAPI.Message, callbackQuery *botAPI.CallbackQ
 	return []botAPI.Chattable{msg}
 }
 
-func handleReplyCommandArgs(message *botAPI.Message, state model.UserState) (string, interface{}) {
+func handleReplyCommandArgs(message *botAPI.Message, state model.UserState) (model.NewMessageState, *model.SecretMessage) {
 	state.Args = append(state.Args, message.Text)
 	userState.Set(strconv.Itoa(message.From.ID), state, cache.DefaultExpiration)
 
@@ -52,13 +52,11 @@ func handleReplyCommandArgs(message *botAPI.Message, state model.UserState) (str
 		err := db.MessagesCollection.Insert(secretMessage)
 		if err != nil {
 			log.WithError(err).Errorln("Can't send message")
-			return model.NewMessageCommandSendErrorMessage, keyboard.NewMainKeyboard()
+			return model.NewMessageStateError, nil
 		}
 
-		log.Errorln(secretMessage)
-
-		return model.NewMessageCommandSentMessage, keyboard.NewMainKeyboard()
+		return model.NewMessageStateSent, secretMessage
 	}
 
-	return model.SomeErrorOccured, keyboard.NewMainKeyboard()
+	return model.NewMessageStateError, nil
 }

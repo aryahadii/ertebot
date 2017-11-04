@@ -8,6 +8,7 @@ import (
 	cache "github.com/patrickmn/go-cache"
 	"gitlab.com/arha/Ertebot/db"
 	"gitlab.com/arha/Ertebot/model"
+	"gitlab.com/arha/Ertebot/ui/keyboard"
 	"gitlab.com/arha/Ertebot/util"
 	"gopkg.in/mgo.v2/bson"
 	botAPI "gopkg.in/telegram-bot-api.v4"
@@ -20,34 +21,80 @@ var (
 func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 	updateUseEpoch(message)
 
-	msg := botAPI.NewMessage(message.Chat.ID, model.SomeErrorOccured)
+	answerMessage := botAPI.NewMessage(message.Chat.ID, model.SomeErrorOccured)
+	answerMessage.ReplyMarkup = keyboard.NewMainKeyboard()
+	var receiverNotifyMessage *botAPI.MessageConfig
 
 	if message.IsCommand() {
-		msg.Text, msg.ReplyMarkup = handleCommand(message)
+		if message.Command() == model.StartCommand {
+			if len(message.CommandArguments()) > 0 {
+				handleNewMessageByLink(message)
+				answerMessage.Text = model.NewMessageCommandMessageInputMessage
+				answerMessage.ReplyMarkup = keyboard.NewBackKeyboard()
+			}
+			answerMessage.Text = model.WelcomeMessage
+		} else if message.Command() == model.HelpRawCommand {
+			answerMessage.Text = model.HelpCommandMessage
+		} else {
+			answerMessage.Text = model.WrongCommandMessage
+		}
 	} else if message.Text == model.BackCommand {
-		msg.Text, msg.ReplyMarkup = handleBackCommand(message)
+		handleBackCommand(message)
+		answerMessage.Text = model.BackCommandMessage
 	} else if message.Text == model.InboxCommand {
 		return handleInboxCommand(message, nil, message.From, message.Chat)
 	} else if message.Text == model.LinkCommand {
-		msg.Text, msg.ReplyMarkup = handleMyLinkCommand(message)
+		link, err := handleMyLinkCommand(message)
+		if err != nil {
+			answerMessage.Text = model.SomeErrorOccured
+		} else {
+			answerMessage.Text = link
+		}
 	} else if message.Text == model.HelpCommand {
-		msg.Text, msg.ReplyMarkup = handleHelpCommand(message)
+		answerMessage.Text = model.HelpCommandMessage
 	} else if message.Text == model.NewMessageCommand {
-		msg.Text, msg.ReplyMarkup = handleNewMessage(message)
+		handleNewMessage(message)
+		answerMessage.Text = model.NewMessageCommandMessageInputMessage
+		answerMessage.ReplyMarkup = keyboard.NewBackKeyboard()
 	} else {
 		state, found := userState.Get(strconv.Itoa(message.From.ID))
 		if found {
+			var messageState model.NewMessageState
+			var secretMessage *model.SecretMessage
 			if (state.(model.UserState)).Command == model.NewMessageCommand {
-				msg.Text, msg.ReplyMarkup = handleNewMessageArgs(message, state.(model.UserState))
+				messageState, secretMessage = handleNewMessageArgs(message, state.(model.UserState))
 			} else if (state.(model.UserState)).Command == model.ReplyCommand {
-				msg.Text, msg.ReplyMarkup = handleReplyCommandArgs(message, state.(model.UserState))
+				messageState, secretMessage = handleReplyCommandArgs(message, state.(model.UserState))
 			} else if (state.(model.UserState)).Command == model.NewMessageByLinkCommand {
-				msg.Text, msg.ReplyMarkup = handleNewMessageByLinkArgs(message, state.(model.UserState))
+				messageState, secretMessage = handleNewMessageByLinkArgs(message, state.(model.UserState))
+			}
+
+			if messageState == model.NewMessageStateInputUsername {
+				answerMessage.Text = model.NewMessageCommandUsernameMessage
+				answerMessage.ReplyMarkup = keyboard.NewBackKeyboard()
+			} else if messageState == model.NewMessageStateInputText {
+				answerMessage.Text = model.NewMessageCommandMessageInputMessage
+				answerMessage.ReplyMarkup = keyboard.NewBackKeyboard()
+			} else if messageState == model.NewMessageStateSent {
+				answerMessage.Text = model.NewMessageCommandSentMessage
+				if secretMessage != nil && secretMessage.ReceiverID != "" {
+					id, _ := strconv.ParseInt(secretMessage.ReceiverID, 10, 64)
+					receiverNotifyMessage = &botAPI.MessageConfig{}
+					*receiverNotifyMessage = botAPI.NewMessage(id, model.NewMessageReceived)
+				}
+			} else if messageState == model.NewMessageStateError {
+				answerMessage.Text = model.NewMessageCommandSentMessage
 			}
 		}
 	}
 
-	return []botAPI.Chattable{msg}
+	chattables := []botAPI.Chattable{
+		answerMessage,
+	}
+	if receiverNotifyMessage != nil {
+		chattables = append(chattables, receiverNotifyMessage)
+	}
+	return chattables
 }
 
 func HandleCallback(callbackQuery *botAPI.CallbackQuery) []botAPI.Chattable {
