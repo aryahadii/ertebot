@@ -31,8 +31,9 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 				handleNewMessageByLink(message)
 				answerMessage.Text = model.NewMessageCommandMessageInputMessage
 				answerMessage.ReplyMarkup = keyboard.NewBackKeyboard()
+			} else {
+				answerMessage.Text = model.WelcomeMessage
 			}
-			answerMessage.Text = model.WelcomeMessage
 		} else if message.Command() == model.HelpRawCommand {
 			answerMessage.Text = model.HelpCommandMessage
 		} else {
