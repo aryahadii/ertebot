@@ -71,7 +71,7 @@ func ThreadToStringSlice(thread []model.SecretMessage, myID string) string {
 				}
 				threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, babeName, message.Message)
 			} else {
-				threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, message.SenderID, message.Message)
+				threadMessages += fmt.Sprintf(model.InboxMessagesTemplate, GetMD5(message.SenderID)[2:6], message.Message)
 			}
 		}
 	}
