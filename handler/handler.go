@@ -41,6 +41,7 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 	} else if message.Text == model.BackCommand {
 		handleBackCommand(message)
 		answerMessage.Text = model.BackCommandMessage
+		userState.Delete(strconv.Itoa(message.From.ID))
 	} else if message.Text == model.InboxCommand {
 		return handleInboxCommand(message, nil, message.From, message.Chat)
 	} else if message.Text == model.LinkCommand {
@@ -85,6 +86,8 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 			} else if messageState == model.NewMessageStateError {
 				answerMessage.Text = model.NewMessageCommandSentMessage
 			}
+
+			userState.Delete(strconv.Itoa(message.From.ID))
 		}
 	}
 
