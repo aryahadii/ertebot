@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"gitlab.com/arha/Ertebot/configuration"
 )
 
 var rootCmd = &cobra.Command{
@@ -11,5 +12,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize()
+	cobra.OnInitialize(func() {
+		configuration.LoadConfig()
+	})
 }

@@ -1,6 +1,6 @@
 package: gitlab.com/arha/Ertebot
 import:
-- package: github.com/Sirupsen/logrus
+- package: github.com/sirupsen/logrus
   version: ~1.0.3
 - package: github.com/spf13/cobra
 - package: gopkg.in/telegram-bot-api.v4
@@ -8,3 +8,5 @@ import:
 - package: github.com/patrickmn/go-cache
   version: ~2.0.0
 - package: gopkg.in/mgo.v2
+- package: github.com/spf13/viper
+  version: ~1.0.0

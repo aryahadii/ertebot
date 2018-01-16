@@ -1,7 +1,8 @@
 package db
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"gitlab.com/arha/Ertebot/configuration"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -19,7 +20,7 @@ const (
 
 func NewMongoDB() {
 	var err error
-	session, err = mgo.Dial("mongodb:27017")
+	session, err = mgo.Dial(configuration.ErtebotConfig.GetString("mongodb-address"))
 	if err != nil {
 		log.WithError(err).Fatalln("MongoDB session can't be created")
 	}

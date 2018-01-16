@@ -19,6 +19,8 @@ func init() {
 func start(cmd *cobra.Command, args []string) {
 	// logVersion()
 
+	updater.InitBot()
+
 	db.NewMongoDB()
 	defer db.Close()
 

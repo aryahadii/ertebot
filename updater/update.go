@@ -1,7 +1,8 @@
 package updater
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
+	"gitlab.com/arha/Ertebot/configuration"
 	"gitlab.com/arha/Ertebot/handler"
 	botAPI "gopkg.in/telegram-bot-api.v4"
 )
@@ -14,13 +15,13 @@ var (
 	bot *botAPI.BotAPI
 )
 
-func init() {
+func InitBot() {
 	var err error
-	bot, err = botAPI.NewBotAPI(botToken)
+	bot, err = botAPI.NewBotAPI(configuration.ErtebotConfig.GetString("bot-token"))
 	if err != nil {
 		log.WithError(err).Fatalln("Can't initialize bot")
 	}
-	bot.Debug = false
+	bot.Debug = configuration.ErtebotConfig.GetBool("debug")
 
 	log.Infof("Authorized on account %s", bot.Self.UserName)
 }
