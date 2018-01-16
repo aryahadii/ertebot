@@ -84,11 +84,11 @@ func HandleMessage(message *botAPI.Message) []botAPI.Chattable {
 					receiverNotifyMessage = &botAPI.MessageConfig{}
 					*receiverNotifyMessage = botAPI.NewMessage(id, model.NewMessageReceived)
 				}
+				userState.Delete(strconv.Itoa(message.From.ID))
 			} else if messageState == model.NewMessageStateError {
-				answerMessage.Text = model.NewMessageCommandSentMessage
+				answerMessage.Text = model.NewMessageCommandSendErrorMessage
+				userState.Delete(strconv.Itoa(message.From.ID))
 			}
-
-			userState.Delete(strconv.Itoa(message.From.ID))
 		}
 	}
 
